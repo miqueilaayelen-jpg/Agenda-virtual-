@@ -146,6 +146,13 @@ cursor:pointer;
 margin-left:10px;
 }
 
+.turno{
+margin-top:10px;
+padding:12px;
+border-radius:12px;
+background:rgba(255,255,255,0.05);
+}
+
 /* FOOTER */
 
 .footer{
@@ -206,6 +213,7 @@ padding:15px;
 
 <button onclick="show('home')">Inicio</button>
 <button onclick="show('agenda')">Agenda</button>
+<button onclick="show('turnos')">Turnos</button>
 <button onclick="show('finanzas')">Finanzas</button>
 <button onclick="show('ideas')">Ideas</button>
 <button onclick="show('notes')">Notas</button>
@@ -235,30 +243,6 @@ padding:15px;
 💅 Tu negocio también merece orden y belleza
 </div>
 
-<div class="footer">
-
-<div class="quote">“No estás atrasada, estás construyendo algo tuyo.”</div>
-<div class="quote">“La constancia crea resultados que la motivación no puede.”</div>
-<div class="quote">“Pequeños pasos también cuentan.”</div>
-<div class="quote">“Tu energía es tu mayor herramienta.”</div>
-<div class="quote">“Cada idea puede convertirse en ingresos.”</div>
-
-<div class="bigspace"></div>
-
-<div class="quote">💖 Hoy es un buen día para crecer.</div>
-<div class="quote">🌙 Confía en tu proceso.</div>
-<div class="quote">✨ Estás más cerca de lo que crees.</div>
-<div class="quote">💅 Hazlo con estilo, hazlo a tu manera.</div>
-
-<div class="bigspace"></div>
-
-<div class="quote">“Lo que organizas, lo multiplicas.”</div>
-<div class="quote">“Tu disciplina vale más que la inspiración.”</div>
-<div class="quote">“Crea, mejora, repite.”</div>
-<div class="quote">“Tu negocio es tu arte.”</div>
-
-</div>
-
 </div>
 
 <!-- AGENDA -->
@@ -276,6 +260,30 @@ Agregar
 </button>
 
 <div id="taskList"></div>
+
+</div>
+
+</div>
+
+<!-- TURNOS -->
+
+<div id="turnos" class="section">
+
+<div class="card">
+
+📅 Calendario de Turnos
+
+<input id="clientInput" class="input" placeholder="Nombre de la clienta">
+
+<input id="dateInput" class="input" type="date">
+
+<input id="timeInput" class="input" type="time">
+
+<button class="button" onclick="addTurno()">
+Guardar Turno
+</button>
+
+<div id="turnoList"></div>
 
 </div>
 
@@ -322,20 +330,6 @@ Agregar
 💖 Ganancia
 
 <p id="profit"></p>
-
-</div>
-
-<div class="card">
-
-🧾 Ventas
-
-<input id="saleInput" class="input">
-
-<button class="button" onclick="addSale()">
-Agregar
-</button>
-
-<div id="saleList"></div>
 
 </div>
 
@@ -419,10 +413,10 @@ document.getElementById(id).classList.add('active');
 let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 let income = JSON.parse(localStorage.getItem("income")) || [];
 let expense = JSON.parse(localStorage.getItem("expense")) || [];
-let sales = JSON.parse(localStorage.getItem("sales")) || [];
 let ideas = JSON.parse(localStorage.getItem("ideas")) || [];
 let notes = JSON.parse(localStorage.getItem("notes")) || [];
 let goals = JSON.parse(localStorage.getItem("goals")) || [];
+let turnos = JSON.parse(localStorage.getItem("turnos")) || [];
 
 /* SAVE */
 
@@ -431,10 +425,10 @@ function save(){
 localStorage.setItem("tasks",JSON.stringify(tasks));
 localStorage.setItem("income",JSON.stringify(income));
 localStorage.setItem("expense",JSON.stringify(expense));
-localStorage.setItem("sales",JSON.stringify(sales));
 localStorage.setItem("ideas",JSON.stringify(ideas));
 localStorage.setItem("notes",JSON.stringify(notes));
 localStorage.setItem("goals",JSON.stringify(goals));
+localStorage.setItem("turnos",JSON.stringify(turnos));
 
 }
 
@@ -445,10 +439,11 @@ function render(){
 renderList("taskList",tasks,"📝 ");
 renderList("incomeList",income,"+$");
 renderList("expenseList",expense,"-$");
-renderList("saleList",sales,"🧾 ");
 renderList("ideaList",ideas,"💡 ");
 renderList("noteList",notes,"📒 ");
 renderList("goalList",goals,"⭐ ");
+
+renderTurnos();
 
 calc();
 
@@ -479,12 +474,112 @@ c.appendChild(div);
 
 }
 
+/* TURNOS */
+
+function addTurno(){
+
+let client=document.getElementById("clientInput").value;
+let date=document.getElementById("dateInput").value;
+let time=document.getElementById("timeInput").value;
+
+if(client && date && time){
+
+turnos.push({
+client,
+date,
+time,
+notified:false
+});
+
+document.getElementById("clientInput").value="";
+document.getElementById("dateInput").value="";
+document.getElementById("timeInput").value="";
+
+save();
+render();
+
+}
+
+}
+
+function renderTurnos(){
+
+let c=document.getElementById("turnoList");
+
+if(!c) return;
+
+c.innerHTML="";
+
+turnos.forEach((t,i)=>{
+
+let div=document.createElement("div");
+
+div.className="turno";
+
+div.innerHTML=`
+<div>💅 ${t.client}</div>
+<div>📅 ${t.date}</div>
+<div>⏰ ${t.time}</div>
+<div class="remove" onclick="removeTurno(${i})">❌</div>
+`;
+
+c.appendChild(div);
+
+});
+
+}
+
+function removeTurno(i){
+
+turnos.splice(i,1);
+
+save();
+render();
+
+}
+
+/* RECORDATORIOS */
+
+function checkTurnos(){
+
+let now=new Date();
+
+let currentDate=now.toISOString().split("T")[0];
+
+let currentHour=String(now.getHours()).padStart(2,'0');
+let currentMinute=String(now.getMinutes()).padStart(2,'0');
+
+let currentTime=currentHour + ":" + currentMinute;
+
+turnos.forEach((t)=>{
+
+if(
+t.date===currentDate &&
+t.time===currentTime &&
+!t.notified
+){
+
+alert("💖 Recordatorio: Tenés turno con " + t.client + " a las " + t.time);
+
+t.notified=true;
+
+save();
+
+}
+
+});
+
+}
+
+setInterval(checkTurnos,30000);
+
+/* REMOVE */
+
 function removeItem(type,i){
 
 if(type==="taskList") tasks.splice(i,1);
 if(type==="incomeList") income.splice(i,1);
 if(type==="expenseList") expense.splice(i,1);
-if(type==="saleList") sales.splice(i,1);
 if(type==="ideaList") ideas.splice(i,1);
 if(type==="noteList") notes.splice(i,1);
 if(type==="goalList") goals.splice(i,1);
@@ -539,23 +634,6 @@ if(v){
 expense.push(v);
 
 document.getElementById("expenseInput").value="";
-
-save();
-render();
-
-}
-
-}
-
-function addSale(){
-
-let v=document.getElementById("saleInput").value;
-
-if(v){
-
-sales.push(v);
-
-document.getElementById("saleInput").value="";
 
 save();
 render();
@@ -638,7 +716,6 @@ render();
 if ('serviceWorker' in navigator) {
 
 navigator.serviceWorker.register('./service-worker.js')
-
 .then(() => console.log('Service Worker registrado'));
 
 }
