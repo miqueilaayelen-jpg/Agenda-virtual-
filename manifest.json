@@ -1,7 +1,7 @@
 
 {
   "name": "Coquette Beauty Book",
-  "short_name": "Beauty Book",
+  "short_name": "Coquette Beauty Book",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#111111",
